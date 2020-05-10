@@ -1,12 +1,13 @@
+# Getting QEMU binaries for armhf architecture
 FROM alpine AS qemu
 
-# Download QEMU, see https://github.com/docker/hub-feedback/issues/1261
 ENV QEMU_URL https://github.com/balena-io/qemu/releases/download/v4.0.0%2Bbalena2/qemu-4.0.0.balena2-arm.tar.gz
 RUN apk add curl && curl -L ${QEMU_URL} | tar zxvf - -C . --strip-components 1
 
+
+# Building Deemix
 FROM arm32v7/python:alpine AS builder
 
-# Add QEMU
 COPY --from=qemu qemu-arm-static /usr/bin
 
 RUN apk --no-cache add git gcc python3-dev libc-dev && \
@@ -14,7 +15,11 @@ RUN apk --no-cache add git gcc python3-dev libc-dev && \
     git clone https://notabug.org/RemixDev/deemix.git deemix && \
     pip install --user -r deemix/requirements.txt
 
+
+# Configuring Deemix
 FROM arm32v7/python:alpine
+
+COPY --from=qemu qemu-arm-static /usr/bin
 
 LABEL description="Deemix in alpine." \
       maintainer="zer <zerpex@gmail.com>"
